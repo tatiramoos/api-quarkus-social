@@ -77,7 +77,6 @@ public class UserResource {
             user.setAge(userData.getAge());
             return Response.noContent().build();
         }
-
         return Response.status(Response.Status.NOT_FOUND).build();
     }
 }
