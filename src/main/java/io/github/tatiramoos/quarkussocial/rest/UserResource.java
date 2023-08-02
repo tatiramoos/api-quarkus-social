@@ -4,6 +4,7 @@ import io.github.tatiramoos.quarkussocial.domain.model.User;
 import io.github.tatiramoos.quarkussocial.domain.repository.UserRepository;
 import io.github.tatiramoos.quarkussocial.rest.dto.CreateUserRequest;
 
+import io.github.tatiramoos.quarkussocial.rest.dto.RespondeError;
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -35,9 +36,8 @@ public class UserResource {
         Set<ConstraintViolation<CreateUserRequest>> violations = validator.validate(userRequest);
 
         if (!violations.isEmpty()){
-            ConstraintViolation<CreateUserRequest> erro = violations.stream().findAny().get();
-            String errorMessage = erro.getMessage();
-            return Response.status(400).entity(errorMessage).build();
+            RespondeError respondeError = RespondeError.createFromValidation(violations);
+            return Response.status(400).entity(respondeError).build();
         }
 
         User user = new User();
