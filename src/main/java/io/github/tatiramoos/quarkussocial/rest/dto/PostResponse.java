@@ -13,6 +13,7 @@ public class PostResponse {
     private LocalDateTime dateTime;
 
     public static PostResponse fromEntity (Post post) {
+
         var response = new PostResponse();
         response.setText(post.getText());
         response.setDateTime(post.getDateTime());
