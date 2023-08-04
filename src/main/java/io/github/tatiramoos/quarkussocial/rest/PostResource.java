@@ -2,6 +2,7 @@ package io.github.tatiramoos.quarkussocial.rest;
 
 import io.github.tatiramoos.quarkussocial.domain.model.Post;
 import io.github.tatiramoos.quarkussocial.domain.model.User;
+import io.github.tatiramoos.quarkussocial.domain.repository.FollowerRepository;
 import io.github.tatiramoos.quarkussocial.domain.repository.PostRepository;
 import io.github.tatiramoos.quarkussocial.domain.repository.UserRepository;
 import io.github.tatiramoos.quarkussocial.rest.dto.CreatePostRequest;
@@ -23,11 +24,13 @@ public class PostResource {
 
     private UserRepository userRepository;
     private PostRepository repository;
+    private FollowerRepository followerRepository;
 
     @Inject
-    public PostResource(UserRepository userRepository, PostRepository repository) {
+    public PostResource(UserRepository userRepository, PostRepository repository, FollowerRepository followerRepository) {
         this.userRepository = userRepository;
         this.repository = repository;
+        this.followerRepository = followerRepository;
     }
 
     @POST
@@ -49,10 +52,25 @@ public class PostResource {
 
     @GET
     @Transactional
-    public Response listPost(@PathParam("userId") Long userId){
+    public Response listPosts(@PathParam("userId") Long userId, @HeaderParam("followerId") Long followerId){
+
+        // se o usuário não existir não será encontrado.
         User user = userRepository.findById(userId);
         if(user == null){
             return Response.status(Response.Status.NOT_FOUND).build();
+        }
+        if(followerId == null){
+            return Response.status(Response.Status.BAD_REQUEST).entity("You forgot the header followerId").build();
+        }
+
+        User follower = userRepository.findById(followerId);
+        if(follower == null){
+            return Response.status(Response.Status.BAD_REQUEST).entity("Nonexistent followerId").build();
+        }
+
+        boolean follows = followerRepository.follows(follower, user);
+        if(!follows){
+            return Response.status(Response.Status.FORBIDDEN).entity("You can't see there posts").build();
         }
 
         PanacheQuery<Post> query = repository.find("user", Sort.by("dateTime", Sort.Direction.Descending), user);
